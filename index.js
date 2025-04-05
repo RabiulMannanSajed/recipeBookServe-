@@ -43,8 +43,14 @@ async function run() {
       const result = await addRecipesCollection.insertOne(recipe);
       res.send(result);
     });
+
     app.get("/addRecipes", async (req, res) => {
       const result = await addRecipesCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.delete("/addRecipes/:id", async (req, res) => {
+      const result = await addRecipesCollection.deleteOne();
       res.send(result);
     });
 
