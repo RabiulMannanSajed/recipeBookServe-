@@ -7,7 +7,7 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.z68se.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`; // ` this is use to daynamic somthig `
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -40,6 +40,7 @@ async function run() {
     //! this part is for Recipe add, delete, read and update
     app.post("/addRecipes", async (req, res) => {
       const recipe = req.body;
+      console.log(recipe);
       const result = await addRecipesCollection.insertOne(recipe);
       res.send(result);
     });
@@ -50,7 +51,11 @@ async function run() {
     });
 
     app.delete("/addRecipes/:id", async (req, res) => {
-      const result = await addRecipesCollection.deleteOne();
+      const id = req.params.id;
+      console.log(id);
+
+      const filter = { _id: new ObjectId(id) };
+      const result = await addRecipesCollection.deleteOne(filter);
       res.send(result);
     });
 
@@ -74,3 +79,8 @@ app.get("/", (req, res) => {
 app.listen(port, () => {
   console.log(`EDUSystem is running Port ${port}`);
 });
+
+// crud
+// c=> create = post
+// r => read = get
+//!u => update = patch
