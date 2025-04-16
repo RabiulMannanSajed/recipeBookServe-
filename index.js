@@ -24,10 +24,32 @@ async function run() {
     const usersCollection = client.db("rBook").collection("users");
     const addRecipesCollection = client.db("rBook").collection("addRecipe");
 
-    //  this is get
-    app.get("/users", async (req, res) => {
-      const result = await usersCollection.find().toArray();
-      res.send(result);
+    //this part is for the login here check the user valid or not
+
+    app.post("/login", async (req, res) => {
+      const { email, password } = req.body;
+
+      try {
+        const user = await usersCollection.findOne({ email });
+
+        if (!user) {
+          return res.status(400).send({ error: "User not found" });
+        }
+
+        if (user.password !== password) {
+          return res.status(400).send({ error: "Incorrect password" });
+        }
+
+        // Login success — return user info (no token)
+        res.send({
+          message: "Login successful",
+          name: user.name,
+          email: user.email,
+        });
+      } catch (error) {
+        console.error("Login error:", error);
+        res.status(500).send({ error: "Server error" });
+      }
     });
 
     //  this is post method
@@ -73,14 +95,9 @@ async function run() {
 }
 run().catch(console.dir);
 app.get("/", (req, res) => {
-  res.send("EDUSystem is open  ");
+  res.send("Rbook is open  ");
 });
 
 app.listen(port, () => {
-  console.log(`EDUSystem is running Port ${port}`);
+  console.log(`Rbook is running Port ${port}`);
 });
-
-// crud
-// c=> create = post
-// r => read = get
-//!u => update = patch
