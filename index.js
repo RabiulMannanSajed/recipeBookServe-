@@ -10,7 +10,6 @@ app.use(express.json());
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.z68se.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`; // ` this is use to daynamic somthig `
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -24,23 +23,23 @@ async function run() {
     const usersCollection = client.db("rBook").collection("users");
     const addRecipesCollection = client.db("rBook").collection("addRecipe");
 
-    //this part is for the login here check the user valid or not
-
     app.post("/login", async (req, res) => {
       const { email, password } = req.body;
-
+      const userInfo = req.body;
       try {
         const user = await usersCollection.findOne({ email });
 
         if (!user) {
+          console.log("user not found ");
           return res.status(400).send({ error: "User not found" });
         }
 
         if (user.password !== password) {
+          console.log("pass not  found ");
+
           return res.status(400).send({ error: "Incorrect password" });
         }
 
-        // Login success — return user info (no token)
         res.send({
           message: "Login successful",
           name: user.name,
@@ -52,7 +51,6 @@ async function run() {
       }
     });
 
-    //  this is post method
     app.post("/users", async (req, res) => {
       const user = req.body;
       const result = await usersCollection.insertOne(user);
@@ -72,6 +70,32 @@ async function run() {
       res.send(result);
     });
 
+    app.patch("/addRecipes/:id", async (req, res) => {
+      const { id } = req.params;
+      const { name, recipeName, recipeDetails } = req.body;
+      console.log(id, name, recipeDetails, recipeName);
+      try {
+        const filter = { _id: new ObjectId(id) };
+        const updateDoc = {
+          $set: {
+            recipeName,
+            recipeDetails,
+          },
+        };
+
+        const result = await addRecipesCollection.updateOne(filter, updateDoc);
+
+        if (result.matchedCount === 0) {
+          return res.status(404).send("Recipe not found");
+        }
+
+        res.send({ message: "Recipe updated successfully" });
+      } catch (error) {
+        console.error(error);
+        res.status(500).send("Internal Server Error");
+      }
+    });
+
     app.delete("/addRecipes/:id", async (req, res) => {
       const id = req.params.id;
       console.log(id);
@@ -81,15 +105,14 @@ async function run() {
       res.send(result);
     });
 
-    // Connect the client to the server	(optional starting in v4.7)
+    // update part here
+
     await client.connect();
-    // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
   } finally {
-    // Ensures that the client will close when you finish/error
     // await client.close();
   }
 }
